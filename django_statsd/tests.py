@@ -12,10 +12,9 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseForbidden
 from django.test import TestCase
 from django.test.client import RequestFactory
-from django.utils import dictconfig
-from django.utils import unittest
 
 import mock
+from logging.config import dictConfig
 from nose.tools import eq_
 from django_statsd.clients import get_client, statsd
 from django_statsd.patches import utils
@@ -75,7 +74,7 @@ class TestIncr(TestCase):
 
 
 @mock.patch.object(middleware.statsd, 'timing')
-class TestTiming(unittest.TestCase):
+class TestTiming(TestCase):
 
     def setUp(self):
         self.req = RequestFactory().get('/')
@@ -133,7 +132,7 @@ class TestTiming(unittest.TestCase):
             eq_(expected, args[0])
 
 
-class TestClient(unittest.TestCase):
+class TestClient(TestCase):
 
     @mock.patch.object(settings, 'STATSD_CLIENT', 'statsd.client')
     def test_normal(self):
@@ -158,6 +157,15 @@ class TestClient(unittest.TestCase):
         eq_(client.cache, {'testing|count': [[1, 1]]})
 
 
+def check_metlog_is_installed():
+    try:
+        from metlog.config import client_from_dict_config
+        return True
+    except ImportError:
+        return False
+
+
+@skipUnless(check_metlog_is_installed(), 'Metlog is not installed')
 class TestMetlogClient(TestCase):
 
     def check_metlog(self):
@@ -385,7 +393,7 @@ class TestRecord(TestCase):
 class TestErrorLog(TestCase):
 
     def setUp(self):
-        dictconfig.dictConfig(cfg)
+        dictConfig(cfg)
         self.log = logging.getLogger('test.logging')
 
     def division_error(self):
@@ -522,7 +530,7 @@ class TestCursorWrapperPatching(TestCase):
         'django_statsd.patches.db.pre_django_1_6_cursorwrapper_getattr')
     @mock.patch('django_statsd.patches.db.patched_executemany')
     @mock.patch('django_statsd.patches.db.patched_execute')
-    @mock.patch('django.db.backends.util.CursorDebugWrapper')
+    @mock.patch('django.db.backends.utils.CursorDebugWrapper')
     @skipUnless(VERSION < (1, 6, 0), "CursorWrapper Patching for Django<1.6")
     def test_cursorwrapper_patching(self,
                                     CursorDebugWrapper,
@@ -530,7 +538,7 @@ class TestCursorWrapperPatching(TestCase):
                                     executemany,
                                     _getattr):
         try:
-            from django.db.backends import util
+            from django.db.backends import utils
 
             # We need to patch CursorWrapper like this because setting
             # __getattr__ on Mock instances raises AttributeError.
@@ -558,7 +566,7 @@ class TestCursorWrapperPatching(TestCase):
     @mock.patch('django_statsd.patches.db.patched_callproc')
     @mock.patch('django_statsd.patches.db.patched_executemany')
     @mock.patch('django_statsd.patches.db.patched_execute')
-    @mock.patch('django.db.backends.util.CursorWrapper')
+    @mock.patch('django.db.backends.utils.CursorWrapper')
     @skipUnless(VERSION >= (1, 6, 0), "CursorWrapper Patching for Django>=1.6")
     def test_cursorwrapper_patching16(self,
                                       CursorWrapper,

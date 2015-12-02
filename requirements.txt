@@ -1,5 +1,2 @@
-mock
-nose
-unittest2
-statsd>=2.0.0
-django<1.7
+-r requirements_base.txt
+django>=1.8

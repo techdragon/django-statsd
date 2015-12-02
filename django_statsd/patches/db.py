@@ -1,5 +1,5 @@
 import django
-from django.db.backends import util
+from django.db.backends import utils
 
 from django_statsd.patches.utils import wrap, patch_method
 from django_statsd.clients import statsd
@@ -52,14 +52,14 @@ def patch():
     """
 
     if django.VERSION > (1, 6):
-        # In 1.6+ util.CursorDebugWrapper just makes calls to CursorWrapper
+        # In 1.6+ utils.CursorDebugWrapper just makes calls to CursorWrapper
         # As such, we only need to instrument CursorWrapper.
         # Instrumenting both will result in duplicated metrics
-        patch_method(util.CursorWrapper, 'execute')(patched_execute)
-        patch_method(util.CursorWrapper, 'executemany')(patched_executemany)
-        patch_method(util.CursorWrapper, 'callproc')(patched_callproc)
+        patch_method(utils.CursorWrapper, 'execute')(patched_execute)
+        patch_method(utils.CursorWrapper, 'executemany')(patched_executemany)
+        patch_method(utils.CursorWrapper, 'callproc')(patched_callproc)
     else:
-        util.CursorWrapper.__getattr__ = pre_django_1_6_cursorwrapper_getattr
-        patch_method(util.CursorDebugWrapper, 'execute')(patched_execute)
+        utils.CursorWrapper.__getattr__ = pre_django_1_6_cursorwrapper_getattr
+        patch_method(utils.CursorDebugWrapper, 'execute')(patched_execute)
         patch_method(
-            util.CursorDebugWrapper, 'executemany')(patched_executemany)
+            utils.CursorDebugWrapper, 'executemany')(patched_executemany)
