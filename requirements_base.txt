@@ -1,0 +1,4 @@
+mock
+nose
+unittest2
+statsd>=2.0.0
